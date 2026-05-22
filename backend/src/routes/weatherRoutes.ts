@@ -24,5 +24,5 @@ const router = express.Router();
  *         description: Weather data
  */
 router.get('/', getWeather);
-
+    
 export default router;

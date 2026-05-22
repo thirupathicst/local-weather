@@ -5,7 +5,7 @@ import morgan from 'morgan';
 
 import weatherRoutes from './routes/weatherRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
-import swaggerDocs from './config/swagger.js';
+import { setupSwagger } from './config/swagger.js';
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/weather', weatherRoutes);
-swaggerDocs(app);
+setupSwagger(app);
 app.use(errorHandler);
 
 export default app;

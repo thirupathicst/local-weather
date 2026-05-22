@@ -1,6 +1,7 @@
+import { Request, Response, NextFunction } from 'express';
 import { fetchWeather } from '../services/weatherService.js';
 
-export const getWeather = async (req, res, next) => {
+export const getWeather = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { lat, lon } = req.query;
         
@@ -10,7 +11,7 @@ export const getWeather = async (req, res, next) => {
             });
         }
 
-        const weatherData = await fetchWeather(lat, lon);
+        const weatherData = await fetchWeather(Number(lat), Number(lon));
         res.status(200).json(weatherData);
     } catch (error) {
         next(error);
