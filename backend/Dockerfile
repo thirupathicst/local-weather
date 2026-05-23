@@ -18,5 +18,5 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 
 EXPOSE 3000
-user node
+USER node
 CMD ["node", "dist/server.js"]
