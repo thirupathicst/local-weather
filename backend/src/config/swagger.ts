@@ -18,7 +18,7 @@ const options: swaggerJsdoc.Options = {
   },
 
   apis: process.env.NODE_ENV === 'production'
-  ? ['./dist/routes/*.js']
+  ? ['./dist/routes/*.js','./dist/app.js']
   : ['./src/routes/*.ts','./src/app.ts']
 };
 
