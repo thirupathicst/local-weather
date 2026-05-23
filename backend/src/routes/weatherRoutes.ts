@@ -1,5 +1,5 @@
 import express from 'express';
-import { getWeather } from '../controllers/weatherController.js';
+import weatherController from '../controllers/weatherController.js';
 
 const router = express.Router();
 
@@ -23,6 +23,33 @@ const router = express.Router();
  *       200:
  *         description: Weather data
  */
-router.get('/', getWeather);
+router.get('/', weatherController.getWeather);
+
+/**
+ * @swagger
+ * /api/weather/today:
+ *   get:
+ *     summary: Get today's weather details
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: lon
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: date
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Weather data by hourly
+ */
+router.get('/today', weatherController.getTodayWeather);
     
 export default router;

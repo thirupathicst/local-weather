@@ -14,12 +14,32 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.get('/', (req, res) => {
+/**
+ * @swagger
+ * /status:
+ *   get:
+ *     summary: Status endpoint
+ *     description: Checks if the Weather API backend is running.
+ *     responses:
+ *       200:
+ *         description: Success message
+ */
+app.get('/status', (req, res) => {
   res.json({
-    message: 'API Explorer Backend Running'
+    message: 'Weather API Backend Running'
   });
 });
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check
+ *     description: Returns the uptime and operational status of the service.
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ */
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
