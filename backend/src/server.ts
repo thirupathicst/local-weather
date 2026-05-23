@@ -7,3 +7,5 @@ if (process.env.NODE_ENV !== 'production') {
     logger.info(`Server is running on port ${PORT}`);
   });
 }
+
+export default app;
