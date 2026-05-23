@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      target: runner
+    container_name: weather-api
+    ports:
+      - "3000:3000"
+    environment:
+      - Node_ENV=production
+      - PORT=3000
+    restart: always

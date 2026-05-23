@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import weatherRoutes from './routes/weatherRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 import { setupSwagger } from './config/swagger.js';
+import logger from './utils/logger.js';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.get('/health', (req, res) => {
   });
 });
 
+logger.info('Weather API Backend initialized successfully');
 app.use('/api/weather', weatherRoutes);
 setupSwagger(app);
 app.use(errorHandler);
