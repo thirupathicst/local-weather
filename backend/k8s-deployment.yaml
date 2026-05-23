@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: weather-backend
-          image: thirupathi/weather-backend:latest
+          image: thirupathicst/weather-backend:latest
           ports:
             - containerPort: 5000
           env:
