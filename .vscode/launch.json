@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Weather API",
+      "program": "${workspaceFolder}/backend/node_modules/tsx/dist/cli.mjs",
+      "args": ["watch", "src/server.ts"],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {"NODE_ENV": "development"},
+      "console": "integratedTerminal",
+      "restart": true
+    }
+  ]
+}

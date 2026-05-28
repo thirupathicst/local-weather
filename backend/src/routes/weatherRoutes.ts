@@ -1,5 +1,7 @@
 import express from 'express';
-import weatherController from '../controllers/weatherController.js';
+import { WeatherController } from '../controllers/weatherController.js';
+
+const weatherControllerInstance = new WeatherController();
 
 const router = express.Router();
 
@@ -23,7 +25,7 @@ const router = express.Router();
  *       200:
  *         description: Weather data
  */
-router.get('/', weatherController.getWeather);
+router.get('/', weatherControllerInstance.getWeather.bind(weatherControllerInstance));
 
 /**
  * @swagger
@@ -50,6 +52,33 @@ router.get('/', weatherController.getWeather);
  *       200:
  *         description: Weather data by hourly
  */
-router.get('/today', weatherController.getTodayWeather);
+router.get('/today', weatherControllerInstance.getTodayWeather.bind(weatherControllerInstance));
+
+
+/** * @swagger
+ * /api/weather/byDay:
+ *   get:
+ *     summary: Get weather details by day
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: lon
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: date
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Weather data by day
+ */
+router.get('/byDay', weatherControllerInstance.getWeatherByDay.bind(weatherControllerInstance));
     
 export default router;
