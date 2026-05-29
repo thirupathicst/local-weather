@@ -16,7 +16,7 @@ export interface WeatherIntervalReading {
   cloudCoverPercent: number;
   windSpeedMs: number;
 }
-   
+
 export interface DailyWeatherSchedule {
   day: number;
   readings: WeatherIntervalReading[];

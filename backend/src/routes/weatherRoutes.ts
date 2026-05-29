@@ -45,9 +45,10 @@ router.get('/', weatherControllerInstance.getWeather.bind(weatherControllerInsta
  *           type: number
  *       - in: query
  *         name: date
- *         required: false
+ *         required: true
  *         schema:
  *           type: string
+ *           format: 'dd-MM-yyyy'
  *     responses:
  *       200:
  *         description: Weather data by hourly
@@ -75,6 +76,7 @@ router.get('/today', weatherControllerInstance.getTodayWeather.bind(weatherContr
  *         required: false
  *         schema:
  *           type: string
+ *           format: 'dd-MM-yyyy'
  *     responses:
  *       200:
  *         description: Weather data by day

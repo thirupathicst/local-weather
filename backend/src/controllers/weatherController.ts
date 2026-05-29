@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import weatherService from '../services/weatherService.js';
-import { WeatherTransformerService } from '../services/weather-transformer.service.js';
-import { RawWeatherPayloadDTO } from '../DTO/weather.model.js';
+import { WeatherTransformerService } from '../services/weatherTransformerService.js';
+import { RawWeatherPayloadDTO } from '../DTO/weatherModel.js';
 
+const weatherTransformerService = new WeatherTransformerService();
+ 
 export class WeatherController {
     constructor() { }
 
@@ -30,10 +32,14 @@ export class WeatherController {
                     message: 'Latitude and longitude required'
                 });
             }
-            let targetDate = typeof date === 'string' ? new Date(date) : new Date();
-            const weatherDate = this.getYesterdayYYYYMMDD(targetDate);
+            let validDate = this.isValidDate(date as string);
+            if (!validDate.result) {
+                return res.status(400).json({
+                    message: 'Invalid date format (DD-MM-YYYY expected)'
+                });
+            }
             let location = this.geoLocation(Number(lat), Number(lon));
-            let weatherData = await this.getWeatherRaw(location.lat, location.lon, weatherDate, 'G');
+            let weatherData = await this.getWeatherRaw(location.lat, location.lon, validDate.dateObj!, 'G');
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -48,22 +54,25 @@ export class WeatherController {
                     message: 'Latitude and longitude required'
                 });
             }
-            let targetDate = typeof date === 'string' ? new Date(date) : new Date();
-            const weatherDate = this.getYesterdayYYYYMMDD(targetDate);
+            let validDate = this.isValidDate(date as string);
+            if (!validDate.result) {
+                return res.status(400).json({
+                    message: 'Invalid date format (DD-MM-YYYY expected)'
+                });
+            }
             let location = this.geoLocation(Number(lat), Number(lon));
-            let weatherData = await this.getWeatherRaw(location.lat, location.lon, weatherDate, 'N');
+            let weatherData = await this.getWeatherRaw(location.lat, location.lon, validDate.dateObj!, 'N');
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
         }
     }
 
-    private async getWeatherRaw(latValue: number, longValue: number, weatherDate: string, type: 'G' | 'N'): Promise<any> {
-        let result = await weatherService.fetchTodayWeather(latValue, longValue, weatherDate);
-        const service = new WeatherTransformerService();
-        result = service.transformPayload(result as RawWeatherPayloadDTO, '2026-05-28');
+    private async getWeatherRaw(latValue: number, longValue: number, date: Date, type: 'G' | 'N'): Promise<any> {
+        let result = await weatherService.fetchTodayWeather(latValue, longValue, this.getYesterdayYYYYMMDD(date));
+        result = weatherTransformerService.transformPayload.bind(weatherTransformerService)(result as RawWeatherPayloadDTO, date);
         if (type === 'G') {
-            result = service.groupByDay(result);
+            result = weatherTransformerService.groupByDay.bind(weatherTransformerService)(result);
         }
         return result;
     }
@@ -75,9 +84,30 @@ export class WeatherController {
         return { lat: latValue, lon: longValue };
     }
 
+    private isValidDate(date: string): { result: boolean, dateObj?: Date } {
+        const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4})$/;
+        const match = date.match(regex);
+        if (!match) return { result: false };
+        const [, day, month, year] = match;
+        const newDate = new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day)
+        );
+
+        return {
+            result: (
+                newDate.getFullYear() === Number(year) &&
+                newDate.getMonth() === Number(month) - 1 &&
+                newDate.getDate() === Number(day)
+            ),
+            dateObj: newDate
+        };
+    }
+
     private getYesterdayYYYYMMDD(date: Date): string {
-        const d = new Date(date);
-        //d.setDate(d.getDate() - 1);   
-        return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+        let targetDate = new Date(date);
+        //targetDate.setDate(targetDate.getDate() - 1);   
+        return `${targetDate.getFullYear()}${String(targetDate.getMonth() + 1).padStart(2, "0")}${String(targetDate.getDate()).padStart(2, "0")}`;
     }
 }

@@ -1,12 +1,13 @@
-import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule } from '../DTO/weather.model.js';
+import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule } from '../DTO/weatherModel.js';
 
 export class WeatherTransformerService {
     private readonly INTERVAL_MINUTES = 60; // 1 hour
     private readonly READINGS_PER_DAY = 24;  // 24 hours / 1 hour
 
-    public transformPayload(dto: RawWeatherPayloadDTO, startDateStr: string): WeatherIntervalReading[] {
+    public transformPayload(dto: RawWeatherPayloadDTO, date: Date): WeatherIntervalReading[] {
         const readings: WeatherIntervalReading[] = [];
-        const currentTimestamp = new Date(`${startDateStr}T05:30:00`);
+        const currentTimestamp = new Date(date);
+        currentTimestamp.setHours(5, 30, 0, 0);
         const totalDataPoints = dto.temp.length;
 
         for (let i = 0; i < totalDataPoints; i++) { 
