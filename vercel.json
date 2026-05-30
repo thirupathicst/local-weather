@@ -1,6 +1,11 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
+  "functions": {
+    "backend/dist/server.js": {
+      "runtime": "@vercel/node"
+    }
+  },
   "routes": [
     {
       "src": "/api-docs/(.*)",
