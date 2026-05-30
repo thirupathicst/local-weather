@@ -4,9 +4,9 @@ export class WeatherTransformerService {
     private readonly INTERVAL_MINUTES = 60; // 1 hour
     private readonly READINGS_PER_DAY = 24;  // 24 hours / 1 hour
 
-    public transformPayload(dto: RawWeatherPayloadDTO, date: Date): WeatherIntervalReading[] {
+    public transformPayload(dto: RawWeatherPayloadDTO, currentTimestamp: Date): WeatherIntervalReading[] {
         const readings: WeatherIntervalReading[] = [];
-        const currentTimestamp = new Date(date);
+        //const currentTimestamp = new Date(date);
         currentTimestamp.setHours(5, 30, 0, 0);
         const totalDataPoints = dto.temp.length;
 
@@ -33,7 +33,7 @@ export class WeatherTransformerService {
                 temperatureC: parseItem(dto.temp[i]),
                 relativeHumidityPercent: parseItem(dto.rh[i]),
                 cloudCoverPercent: parseItem(dto.tcdc[i]),
-                windSpeedMs: parseItem(dto.wspd100m[i])
+                windSpeedMs: parseItem(dto.wspd[i])
             });
             currentTimestamp.setMinutes(currentTimestamp.getMinutes() + this.INTERVAL_MINUTES);
         }

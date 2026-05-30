@@ -1,15 +1,16 @@
 export interface RawWeatherPayloadDTO {
-  apcp: (number | string)[];         // Precipitation / Rainfall array (contains "NaN")
-  temp: (number | string)[];         // Temperature array
-  rh: (number | string)[];           // Relative Humidity array
-  tcdc: (number | string)[];         // Total Cloud Cover array
-  wspd100m: (number | string)[];     // Wind Speed at 100m array
+  apcp: (number | string)[];         // Precipitation / Rainfall
+  temp: (number | string)[];         // Temperature
+  rh: (number | string)[];           // Relative Humidity
+  tcdc: (number | string)[];         // Total Cloud Cover
+  //wspd100m: (number | string)[];     // Wind Speed at 100m
+  wspd: (number | string)[];          // Wind Speed at 10m
 }
 
 export interface WeatherIntervalReading {
   timestamp: Date;
-  timeString: string;                // e.g., "06:30", "08:00"
-  dayNumber: number;                 // e.g., 1, 2, 3...
+  timeString: string;
+  dayNumber: number;
   rainfallMm: number;
   temperatureC: number;
   relativeHumidityPercent: number;
