@@ -1,19 +1,15 @@
 {
   "version": 2,
+  "rootDirectory": "backend",
   "buildCommand": "npm run build",
-  "functions": {
-    "backend/dist/server.js": {
-      "runtime": "@vercel/node"
-    }
-  },
   "routes": [
     {
       "src": "/api-docs/(.*)",
-      "dest": "backend/dist/server.js"
+      "dest": "dist/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "backend/dist/server.js"
+      "dest": "dist/server.js"
     }
   ]
 }
