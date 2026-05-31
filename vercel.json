@@ -1,14 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "cd backend && npm install && npm run build",
   "routes": [
     {
-      "src": "/api-docs/(.*)",
-      "dest": "dist/server.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "dist/server.js"
+      "dest": "/api/index.js"
     }
   ]
 }
