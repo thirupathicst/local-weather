@@ -1,12 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "builds": [
-    {
-      "src": "backend/dist/server.js",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "cd backend && npm install && npm run build",
   "routes": [
     {
       "src": "/api-docs/(.*)",
