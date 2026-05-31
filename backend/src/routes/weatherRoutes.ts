@@ -56,7 +56,8 @@ router.get('/', weatherControllerInstance.getWeather.bind(weatherControllerInsta
 router.get('/today', weatherControllerInstance.getTodayWeather.bind(weatherControllerInstance));
 
 
-/** * @swagger
+/**
+ * @swagger
  * /api/weather/byDay:
  *   get:
  *     summary: Get weather details by day
