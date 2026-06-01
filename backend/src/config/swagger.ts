@@ -9,35 +9,49 @@ import { Express } from 'express';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const getSwaggerOptions = (): swaggerJsdoc.Options => ({
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Weather API Documentation',
+      version: '1.0.0',
+      description: 'API documentation for the Weather API, which provides weather information based on city names.'
+    },
+    servers: [
+      {
+        url: process.env.SWAGGER_SERVER_URL || 'http://localhost:5000'
+      }
+    ]
+  },
+  apis: [
+    path.join(__dirname, '../routes/*.ts'),
+    path.join(__dirname, '../routes/*.js'),
+    path.join(__dirname, '../app.ts'),
+    path.join(__dirname, '../app.js')
+  ]
+});
+
 export const setupSwagger = (app: Express) => {
   let swaggerDocument;
 
   if (process.env.NODE_ENV === 'production') {
-    // In production, serve from the pre-generated static swagger.json
-    const swaggerFilePath = path.join(__dirname, '../swagger.json');
-    swaggerDocument = JSON.parse(fs.readFileSync(swaggerFilePath, 'utf-8'));
+    // In production, prefer the pre-generated static swagger.json.
+    const candidatePaths = [
+      path.join(__dirname, '../swagger.json'),
+      path.join(process.cwd(), 'dist/swagger.json'),
+      path.join(process.cwd(), 'swagger.json')
+    ];
+    const existingPath = candidatePaths.find((filePath) => fs.existsSync(filePath));
+
+    if (existingPath) {
+      swaggerDocument = JSON.parse(fs.readFileSync(existingPath, 'utf-8'));
+    } else {
+      // Fallback for serverless environments where build artifacts are not persisted as expected.
+      swaggerDocument = swaggerJsdoc(getSwaggerOptions());
+    }
   } else {
-    // In development/debug mode, dynamically generate swagger spec
-    const options: swaggerJsdoc.Options = {
-      definition: {
-        openapi: '3.0.0',
-        info: {
-          title: 'Weather API Documentation',
-          version: '1.0.0',
-          description: 'API documentation for the Weather API, which provides weather information based on city names.'
-        },
-        servers: [
-          {
-            url: 'http://localhost:5000'
-          }
-        ]
-      },
-      apis: [
-        path.join(__dirname, '../routes/*.ts'),
-        path.join(__dirname, '../app.ts')
-      ]
-    };
-    swaggerDocument = swaggerJsdoc(options);
+    // In development/debug mode, dynamically generate swagger spec.
+    swaggerDocument = swaggerJsdoc(getSwaggerOptions());
   }
 
   app.use(
