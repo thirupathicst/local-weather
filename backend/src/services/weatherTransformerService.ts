@@ -1,12 +1,24 @@
-import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule } from '../DTO/weatherModel.js';
+import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule, DailyWeatherSummary, ForecastType } from '../DTO/weatherModel.js';
 
 export class WeatherTransformerService {
-    private readonly INTERVAL_MINUTES = 60; // 1 hour
+    private readonly INTERVAL_MINUTES: number; // 1 hour
     private readonly READINGS_PER_DAY = 24;  // 24 hours / 1 hour
+    
+    constructor(forecastType: ForecastType = '1hr_0p125') {
+        switch (forecastType) {
+            case '3hr_0p125':
+                this.INTERVAL_MINUTES = 180;
+                break;
+            case '6hr_0p125':
+                this.INTERVAL_MINUTES = 360;
+                break;
+            default:
+                this.INTERVAL_MINUTES = 60;
+        }
+    }
 
     public transformPayload(dto: RawWeatherPayloadDTO, currentTimestamp: Date): WeatherIntervalReading[] {
         const readings: WeatherIntervalReading[] = [];
-        //const currentTimestamp = new Date(date);
         currentTimestamp.setHours(5, 30, 0, 0);
         const totalDataPoints = dto.temp.length;
 
@@ -51,5 +63,26 @@ export class WeatherTransformerService {
         });
 
         return Array.from(dailyMap.entries()).map(([day, readings]) => ({ day, readings }));
+    }
+
+
+    public dailySummary(dailySchedules: DailyWeatherSchedule[]): DailyWeatherSummary[] { 
+        return dailySchedules.map(schedule => {
+            const readings = schedule.readings;
+            const tempMinC = Math.min(...readings.map(r => r.temperatureC));
+            const tempMaxC = Math.max(...readings.map(r => r.temperatureC));
+            const rainfallPercent = readings.reduce((sum, r) => sum + r.rainfallMm, 0) / readings.length;
+            const relativeHumidityPercent = readings.reduce((sum, r) => sum + r.relativeHumidityPercent, 0) / readings.length;
+            const cloudCoverPercent = readings.reduce((sum, r) => sum + r.cloudCoverPercent, 0) / readings.length;
+
+            return {
+                timestamp: readings[0].timestamp,
+                tempMinC: parseFloat(tempMinC.toFixed(2)),
+                tempMaxC: parseFloat(tempMaxC.toFixed(2)),
+                rainfallPercent: parseFloat(rainfallPercent.toFixed(2)),
+                relativeHumidityPercent: parseFloat(relativeHumidityPercent.toFixed(2)),
+                cloudCoverPercent: parseFloat(cloudCoverPercent.toFixed(2))
+            };
+        });
     }
 }

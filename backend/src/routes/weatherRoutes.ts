@@ -21,6 +21,11 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: number
+ *       - in: query
+ *         name: days
+ *         required: false
+ *         schema:
+ *           type: number
  *     responses:
  *       200:
  *         description: Weather data
@@ -83,5 +88,27 @@ router.get('/today', weatherControllerInstance.getTodayWeather.bind(weatherContr
  *         description: Weather data by day
  */
 router.get('/byDay', weatherControllerInstance.getWeatherByDay.bind(weatherControllerInstance));
+
+/**
+ * @swagger
+ * /api/weather/summary:
+ *   get:
+ *     summary: Get weather summary
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: lon
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Weather summary data
+ */
+router.get('/summary', weatherControllerInstance.getWeatherSummary.bind(weatherControllerInstance));
     
 export default router;

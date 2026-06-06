@@ -22,3 +22,14 @@ export interface DailyWeatherSchedule {
   day: number;
   readings: WeatherIntervalReading[];
 }
+
+export interface DailyWeatherSummary { 
+  timestamp: Date;
+  tempMinC: number;
+  tempMaxC: number;
+  rainfallPercent: number;
+  relativeHumidityPercent: number;
+  cloudCoverPercent: number;
+}
+
+export type ForecastType = '1hr_0p125' | '3hr_0p125' | '6hr_0p125';

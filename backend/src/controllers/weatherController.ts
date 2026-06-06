@@ -1,16 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import weatherService from '../services/weatherService.js';
+import weatherService from '../services/externalService.js';
 import { WeatherTransformerService } from '../services/weatherTransformerService.js';
-import { RawWeatherPayloadDTO } from '../DTO/weatherModel.js';
+import { ForecastType, RawWeatherPayloadDTO } from '../DTO/weatherModel.js';
 
 const weatherTransformerService = new WeatherTransformerService();
  
 export class WeatherController {
     constructor() { }
 
+    private getTransformerService(forecastType: ForecastType): WeatherTransformerService { 
+        return new WeatherTransformerService(forecastType ?? '1hr_0p125');
+    }
+
     public async getWeather(req: Request, res: Response, next: NextFunction) {
         try {
-            const { lat, lon } = req.query;
+            const { lat, lon,days } = req.query;
         
             if (!lat || !lon) {
                 return res.status(400).json({
@@ -18,7 +22,9 @@ export class WeatherController {
                 });
             }
             let location = this.geoLocation(Number(lat), Number(lon));
-            let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(),'N');
+            
+            const forecastType: ForecastType = days === '3' ? '3hr_0p125' : days === '6' ? '6hr_0p125' : '1hr_0p125';
+            let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(),'N', forecastType);
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -41,6 +47,23 @@ export class WeatherController {
             }
             let location = this.geoLocation(Number(lat), Number(lon));
             let weatherData = await this.getWeatherRaw(location.lat, location.lon, validDate.dateObj!, 'G');
+            res.status(200).json(weatherData);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async getWeatherSummary(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { lat, lon, date } = req.query;
+            if (!lat || !lon) {
+                return res.status(400).json({
+                    message: 'Latitude and longitude required'
+                });
+            }
+            let location = this.geoLocation(Number(lat), Number(lon));
+            let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(), 'G', '3hr_0p125');
+            
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -70,9 +93,24 @@ export class WeatherController {
         }
     }
 
-    private async getWeatherRaw(latValue: number, longValue: number, date: Date, type: 'G' | 'N'): Promise<any> {
-        let result = await weatherService.fetchTodayWeather(latValue, longValue, this.getYesterdayYYYYMMDD(date),'1hr_0p125');
-        result = weatherTransformerService.transformPayload.bind(weatherTransformerService)(result as RawWeatherPayloadDTO, date);
+    private async getWeatherRaw(latValue: number, longValue: number, date: Date, type: 'G' | 'N', forecastType?: ForecastType): Promise<any> {
+        let result: any;
+        if (forecastType) {
+            result = await weatherService.externalService(latValue, longValue, this.getYesterdayYYYYMMDD(date), forecastType);
+            if ('error' in result) {
+                throw new Error(result.error);
+            }
+            const transformerService = this.getTransformerService(forecastType);
+            result = transformerService.transformPayload.bind(transformerService)(result as RawWeatherPayloadDTO, date);
+            if (type === 'G') {
+                result = transformerService.groupByDay.bind(transformerService)(result);
+            }
+            //result = transformerService.dailySummary.bind(transformerService)(result);
+        } else {
+            result = await weatherService.externalService(latValue, longValue, this.getYesterdayYYYYMMDD(date));
+            result = weatherTransformerService.transformPayload.bind(weatherTransformerService)(result as RawWeatherPayloadDTO, date);
+        }
+        
         if (type === 'G') {
             result = weatherTransformerService.groupByDay.bind(weatherTransformerService)(result);
         }
