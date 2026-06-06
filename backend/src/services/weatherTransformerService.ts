@@ -10,13 +10,13 @@ export class WeatherTransformerService {
         currentTimestamp.setHours(5, 30, 0, 0);
         const totalDataPoints = dto.temp.length;
 
-        for (let i = 0; i < totalDataPoints; i++) { 
-            const parseItem = (value: number | string): number => { 
-                if (typeof value === 'string') { 
+        for (let i = 0; i < totalDataPoints; i++) {
+            const parseItem = (value: number | string): number => {
+                if (typeof value === 'string') {
                     const parsed = parseFloat(value);
                     return isNaN(parsed) ? NaN : parsed;
                 }
-                return value??0;
+                return value ?? 0;
             }
 
             const index = i - 1;
@@ -40,11 +40,11 @@ export class WeatherTransformerService {
         return readings;
     }
 
-    public groupByDay(readings: WeatherIntervalReading[]): DailyWeatherSchedule[] { 
+    public groupByDay(readings: WeatherIntervalReading[]): DailyWeatherSchedule[] {
         const dailyMap: Map<number, WeatherIntervalReading[]> = new Map();
 
-        readings.forEach(reading => { 
-            if (!dailyMap.has(reading.dayNumber)) { 
+        readings.forEach(reading => {
+            if (!dailyMap.has(reading.dayNumber)) {
                 dailyMap.set(reading.dayNumber, []);
             }
             dailyMap.get(reading.dayNumber)?.push(reading);

@@ -17,7 +17,8 @@ export class WeatherController {
                     message: 'Latitude and longitude required'
                 });
             }
-            const weatherData = await weatherService.fetchWeather(Number(lat), Number(lon));
+            let location = this.geoLocation(Number(lat), Number(lon));
+            let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(),'N');
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -62,6 +63,7 @@ export class WeatherController {
             }
             let location = this.geoLocation(Number(lat), Number(lon));
             let weatherData = await this.getWeatherRaw(location.lat, location.lon, validDate.dateObj!, 'N');
+            weatherData = weatherData.filter((reading: any) => reading.timestamp.toLocaleDateString() === new Date().toLocaleDateString());
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -69,7 +71,7 @@ export class WeatherController {
     }
 
     private async getWeatherRaw(latValue: number, longValue: number, date: Date, type: 'G' | 'N'): Promise<any> {
-        let result = await weatherService.fetchTodayWeather(latValue, longValue, this.getYesterdayYYYYMMDD(date));
+        let result = await weatherService.fetchTodayWeather(latValue, longValue, this.getYesterdayYYYYMMDD(date),'1hr_0p125');
         result = weatherTransformerService.transformPayload.bind(weatherTransformerService)(result as RawWeatherPayloadDTO, date);
         if (type === 'G') {
             result = weatherTransformerService.groupByDay.bind(weatherTransformerService)(result);
