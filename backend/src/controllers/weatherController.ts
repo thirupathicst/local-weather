@@ -2,19 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 import weatherService from '../services/externalService.js';
 import { WeatherTransformerService } from '../services/weatherTransformerService.js';
 import { ForecastType, RawWeatherPayloadDTO } from '../DTO/weatherModel.js';
+import { retryAsync } from '../utils/retry.js';
 
 const weatherTransformerService = new WeatherTransformerService();
  
 export class WeatherController {
     constructor() { }
 
-    private getTransformerService(forecastType: ForecastType): WeatherTransformerService { 
+    private getTransformerService(forecastType: ForecastType): WeatherTransformerService {
         return new WeatherTransformerService(forecastType ?? '1hr_0p125');
     }
 
     public async getWeather(req: Request, res: Response, next: NextFunction) {
         try {
-            const { lat, lon,days } = req.query;
+            const { lat, lon, days } = req.query;
         
             if (!lat || !lon) {
                 return res.status(400).json({
@@ -24,7 +25,7 @@ export class WeatherController {
             let location = this.geoLocation(Number(lat), Number(lon));
             
             const forecastType: ForecastType = days === '3' ? '3hr_0p125' : days === '6' ? '6hr_0p125' : '1hr_0p125';
-            let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(),'N', forecastType);
+            let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(), 'N', forecastType);
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -96,10 +97,7 @@ export class WeatherController {
     private async getWeatherRaw(latValue: number, longValue: number, date: Date, type: 'G' | 'N', forecastType?: ForecastType): Promise<any> {
         let result: any;
         if (forecastType) {
-            result = await weatherService.externalService(latValue, longValue, this.getYesterdayYYYYMMDD(date), forecastType);
-            if ('error' in result) {
-                throw new Error(result.error);
-            }
+            result = await this.reTryWithPreviousDay(latValue, longValue, date, forecastType!);
             const transformerService = this.getTransformerService(forecastType);
             result = transformerService.transformPayload.bind(transformerService)(result as RawWeatherPayloadDTO, date);
             if (type === 'G') {
@@ -107,7 +105,7 @@ export class WeatherController {
             }
             //result = transformerService.dailySummary.bind(transformerService)(result);
         } else {
-            result = await weatherService.externalService(latValue, longValue, this.getYesterdayYYYYMMDD(date));
+            result = await this.reTryWithPreviousDay(latValue, longValue, date, forecastType!);
             result = weatherTransformerService.transformPayload.bind(weatherTransformerService)(result as RawWeatherPayloadDTO, date);
         }
         
@@ -115,6 +113,25 @@ export class WeatherController {
             result = weatherTransformerService.groupByDay.bind(weatherTransformerService)(result);
         }
         return result;
+    }
+
+    private async reTryWithPreviousDay(latValue: number, longValue: number, date: Date, forecastType: ForecastType): Promise<any> {
+        let attemptIndex = 0;
+        return await retryAsync(
+            async () => {
+                const queryDate = attemptIndex === 0
+                    ? this.getFormattedYYYYMMDDDate(date)
+                    : this.getFormattedYYYYMMDDDate(new Date(date.setDate(date.getDate() - 1)));
+                attemptIndex += 1;
+
+                const response = await weatherService.externalService(latValue, longValue, queryDate, forecastType);
+                if ('error' in response) {
+                    throw new Error(response.error);
+                }
+                return response;
+            },
+            { maxRetries: 3, initialDelayMs: 1000 }
+        );
     }
 
     private geoLocation(lat: number, lon: number): { lat: number, lon: number } {
@@ -145,9 +162,9 @@ export class WeatherController {
         };
     }
 
-    private getYesterdayYYYYMMDD(date: Date): string {
+    private getFormattedYYYYMMDDDate(date: Date): string {
         let targetDate = new Date(date);
-        //targetDate.setDate(targetDate.getDate() - 1);   
+        targetDate.setDate(targetDate.getDate() - 1);
         return `${targetDate.getFullYear()}${String(targetDate.getMonth() + 1).padStart(2, "0")}${String(targetDate.getDate()).padStart(2, "0")}`;
     }
 }

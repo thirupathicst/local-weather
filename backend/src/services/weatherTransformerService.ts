@@ -2,7 +2,7 @@ import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule, Dai
 
 export class WeatherTransformerService {
     private readonly INTERVAL_MINUTES: number;
-    private readonly READINGS_PER_DAY: number;
+    private readonly READINGS_PER_DAY: number = 24 * 60 * 60 * 1000;
     
     constructor(forecastType: ForecastType = '1hr_0p125') {
         switch (forecastType) {
@@ -15,12 +15,21 @@ export class WeatherTransformerService {
             default:
                 this.INTERVAL_MINUTES = 60;
         }
-        this.READINGS_PER_DAY = (24 * 60) / this.INTERVAL_MINUTES;
+    }
+
+    private getDayNumber(date: Date, startOfForecast: Date): number {
+        const startUTC = Date.UTC(startOfForecast.getFullYear(), startOfForecast.getMonth(), startOfForecast.getDate());
+        const current = new Date(date);
+        const currentUTC = Date.UTC(current.getFullYear(), current.getMonth(), current.getDate());
+
+        const dayNumber = Math.floor((currentUTC - startUTC) / this.READINGS_PER_DAY) + 1;
+        return dayNumber;
     }
 
     public transformPayload(dto: RawWeatherPayloadDTO, currentTimestamp: Date): WeatherIntervalReading[] {
         const readings: WeatherIntervalReading[] = [];
         currentTimestamp.setHours(5, 30, 0, 0);
+        const startOfForecast = new Date(currentTimestamp);
         const totalDataPoints = dto.temp.length;
 
         for (let i = 0; i < totalDataPoints; i++) {
@@ -32,10 +41,9 @@ export class WeatherTransformerService {
                 return value ?? 0;
             }
 
-            const index = i - 1;
-            let dayNumber = Math.floor(index / this.READINGS_PER_DAY) + 1;
-            let hours = currentTimestamp.getHours().toString().padStart(2, '0');
-            let minutes = currentTimestamp.getMinutes().toString().padStart(2, '0');
+            const dayNumber = this.getDayNumber(currentTimestamp, startOfForecast);
+            const hours = currentTimestamp.getHours().toString().padStart(2, '0');
+            const minutes = currentTimestamp.getMinutes().toString().padStart(2, '0');
             const timeString = `${hours}:${minutes}`;
 
             readings.push({
@@ -67,7 +75,7 @@ export class WeatherTransformerService {
     }
 
 
-    public dailySummary(dailySchedules: DailyWeatherSchedule[]): DailyWeatherSummary[] { 
+    public dailySummary(dailySchedules: DailyWeatherSchedule[]): DailyWeatherSummary[] {
         return dailySchedules.map(schedule => {
             const readings = schedule.readings;
             const tempMinC = Math.min(...readings.map(r => r.temperatureC));
