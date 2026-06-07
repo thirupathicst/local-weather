@@ -1,8 +1,8 @@
 import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule, DailyWeatherSummary, ForecastType } from '../DTO/weatherModel.js';
 
 export class WeatherTransformerService {
-    private readonly INTERVAL_MINUTES: number; // 1 hour
-    private readonly READINGS_PER_DAY = 24;  // 24 hours / 1 hour
+    private readonly INTERVAL_MINUTES: number;
+    private readonly READINGS_PER_DAY: number;
     
     constructor(forecastType: ForecastType = '1hr_0p125') {
         switch (forecastType) {
@@ -15,6 +15,7 @@ export class WeatherTransformerService {
             default:
                 this.INTERVAL_MINUTES = 60;
         }
+        this.READINGS_PER_DAY = (24 * 60) / this.INTERVAL_MINUTES;
     }
 
     public transformPayload(dto: RawWeatherPayloadDTO, currentTimestamp: Date): WeatherIntervalReading[] {
