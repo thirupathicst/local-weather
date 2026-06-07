@@ -2,7 +2,7 @@ import { RawWeatherPayloadDTO, WeatherIntervalReading, DailyWeatherSchedule, Dai
 
 export class WeatherTransformerService {
     private readonly INTERVAL_MINUTES: number;
-    private readonly READINGS_PER_DAY: number = 24 * 60 * 60 * 1000;
+    private readonly READINGS_PER_DAY = 24 * 60 * 60 * 1000;
     
     constructor(forecastType: ForecastType = '1hr_0p125') {
         switch (forecastType) {

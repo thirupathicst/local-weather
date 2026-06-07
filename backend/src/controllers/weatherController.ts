@@ -64,7 +64,7 @@ export class WeatherController {
             }
             let location = this.geoLocation(Number(lat), Number(lon));
             let weatherData = await this.getWeatherRaw(location.lat, location.lon, new Date(), 'G', '3hr_0p125');
-            
+            weatherData = weatherTransformerService.dailySummary.bind(weatherTransformerService)(weatherData);
             res.status(200).json(weatherData);
         } catch (error) {
             next(error);
@@ -101,9 +101,8 @@ export class WeatherController {
             const transformerService = this.getTransformerService(forecastType);
             result = transformerService.transformPayload.bind(transformerService)(result as RawWeatherPayloadDTO, date);
             if (type === 'G') {
-                result = transformerService.groupByDay.bind(transformerService)(result);
+              return transformerService.groupByDay.bind(transformerService)(result);
             }
-            //result = transformerService.dailySummary.bind(transformerService)(result);
         } else {
             result = await this.reTryWithPreviousDay(latValue, longValue, date, forecastType!);
             result = weatherTransformerService.transformPayload.bind(weatherTransformerService)(result as RawWeatherPayloadDTO, date);
