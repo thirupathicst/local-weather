@@ -141,24 +141,31 @@ export class WeatherController {
     }
 
     private isValidDate(date: string): { result: boolean, dateObj?: Date } {
-        const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4})$/;
-        const match = date.match(regex);
-        if (!match) return { result: false };
-        const [, day, month, year] = match;
-        const newDate = new Date(
-            Number(year),
-            Number(month) - 1,
-            Number(day)
-        );
+        try {
+            const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4})$/;
+            if(!date) {
+                return { result: false };
+            }
+            const match = date.match(regex);
+            if (!match) return { result: false };
+            const [, day, month, year] = match;
+            const newDate = new Date(
+                Number(year),
+                Number(month) - 1,
+                Number(day)
+            );
 
-        return {
-            result: (
-                newDate.getFullYear() === Number(year) &&
-                newDate.getMonth() === Number(month) - 1 &&
-                newDate.getDate() === Number(day)
-            ),
-            dateObj: newDate
-        };
+            return {
+                result: (
+                    newDate.getFullYear() === Number(year) &&
+                    newDate.getMonth() === Number(month) - 1 &&
+                    newDate.getDate() === Number(day)
+                ),
+                dateObj: newDate
+            };
+        } catch (error) {
+            return { result: false };
+        }
     }
 
     private getFormattedYYYYMMDDDate(date: Date): string {

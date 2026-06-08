@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluid Responsive Weather App</title>
+    <style>
+        /* 1. Global Setup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        /* 2. Seamless Responsive Grid App Wrapper */
+        .app-container {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 1000px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            display: grid;
+            grid-template-columns: 340px 1fr; 
+            overflow: hidden;
+        }
+
+        /* 3. Left Component Panel (Static Header on Web) */
+        .left-panel {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-bar button {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .current-display {
+            text-align: center;
+            margin: auto 0;
+        }
+
+        .location {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+        }
+
+        .weather-hero {
+            font-size: 5.5rem;
+            font-weight: 200;
+            line-height: 1;
+            margin: 20px 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .weather-hero .unit {
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-top: 5px;
+        }
+
+        .condition-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        /* 4. Right Content Panel (Scrollable on Web) */
+        .right-panel {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+        }
+
+        /* Horizontal Hourly Layout */
+        .hourly-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        /* Hide Scrollbar for cleaner UI but preserve touch movement */
+        .hourly-container::-webkit-scrollbar,
+        .right-panel::-webkit-scrollbar {
+            height: 5px;
+            width: 5px;
+        }
+        .hourly-container::-webkit-scrollbar-track,
+        .right-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .hourly-container::-webkit-scrollbar-thumb,
+        .right-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+        }
+
+        .hourly-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 14px;
+            min-width: 80px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0; /* Important: Prevents cards squishing on mobile */
+        }
+
+        .hourly-card.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .hourly-time {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .hourly-icon {
+            font-size: 1.5rem;
+        }
+
+        .hourly-temp {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        /* Quick Weather Highlights Grid */
+        .highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .highlight-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .highlight-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .highlight-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Forecast Rows Layout */
+        .forecast-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .forecast-row {
+            display: grid;
+            grid-template-columns: 110px 1fr 45px 45px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 14px 20px;
+            border-radius: 16px;
+        }
+
+        .day-name {
+            font-weight: 500;
+        }
+
+        .day-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+
+        .status-icon {
+            font-size: 1.3rem;
+        }
+
+        .high-temp {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .low-temp {
+            color: rgba(255, 255, 255, 0.4);
+            text-align: right;
+        }
+
+        /* 5. FIX BREAKPOINT FOR COMPACT MOBILE DEVICES */
+        @media (max-width: 880px) {
+            body {
+                padding: 8px; /* Tighter safety margin for mobile */
+            }
+
+            .app-container {
+                grid-template-columns: 1fr;
+                border-radius: 20px;
+            }
+
+            .left-panel {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 24px;
+            }
+
+            .right-panel {
+                padding: 20px;
+                max-height: none;
+                overflow: visible;
+                gap: 24px;
+            }
+
+            /* FIX: Changes from tight 3 columns to 2 wider columns on mobile so labels don't break */
+            .highlights-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* FIX: Re-balances the forecast row layout layout to handle thin phone widths nicely */
+            .forecast-row {
+                padding: 14px 16px; 
+                grid-template-columns: 85px 1fr 35px 35px;
+                gap: 4px;
+            }
+            
+            .day-status span:not(.status-icon) {
+                display: none; /* Hides text descriptor like 'Sunny' on mobile, keeping just the icon to save space */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- LEFT CONTROL PANEL -->
+        <div class="left-panel">
+            <div class="search-bar">
+                <input type="text" placeholder="Search location..." value="New York">
+                <button type="submit">🔍</button>
+            </div>
+
+            <div class="current-display">
+                <div class="location">New York, US</div>
+                <div class="date">Saturday, June 6</div>
+                <div class="weather-hero">
+                    68<span class="unit">°F</span>
+                </div>
+                <div class="condition-badge">🌧️ Light Rain</div>
+            </div>
+        </div>
+
+        <!-- RIGHT DATA PANEL -->
+        <div class="right-panel">
+            
+            <!-- HOURLY FORECAST SECTION -->
+            <div>
+                <div class="section-title">Hourly Forecast</div>
+                <div class="hourly-container">
+                    
+                    <div class="hourly-card active">
+                        <span class="hourly-time">Now</span>
+                        <span class="hourly-icon">🌧️</span>
+                        <span class="hourly-temp">68°</span>
+                    </div>
+
+                    <div class="hourly-card">
+                        <span class="hourly-time">2 PM</span>
+                        <span class="hourly-icon">🌧️</span>
+                        <span class="hourly-temp">67°</span>
+                    </div>
+
+                    <div class="hourly-card">
+                        <span class="hourly-time">3 PM</span>
+                        <span class="hourly-icon">☁️</span>
+                        <span class="hourly-temp">69°</span>
+                    </div>
+
+                    <div class="hourly-card">
+                        <span class="hourly-time">4 PM</span>
+                        <span class="hourly-icon">☁️</span>
+                        <span class="hourly-temp">70°</span>
+                    </div>
+
+                    <div class="hourly-card">
+                        <span class="hourly-time">5 PM</span>
+                        <span class="hourly-icon">⛅</span>
+                        <span class="hourly-temp">71°</span>
+                    </div>
+
+                    <div class="hourly-card">
+                        <span class="hourly-time">6 PM</span>
+                        <span class="hourly-icon">☀️</span>
+                        <span class="hourly-temp">72°</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TODAY'S METRICS HIGHLIGHTS -->
+            <div>
+                <div class="section-title">Today's Details</div>
+                <div class="highlights-grid">
+                    <div class="highlight-card">
+                        <div class="highlight-label">Humidity</div>
+                        <div class="highlight-value">78%</div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-label">Wind speed</div>
+                        <div class="highlight-value">12mph</div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-label">Visibility</div>
+                        <div class="highlight-value">6.2mi</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10-DAY FORECAST -->
+            <div>
+                <div class="section-title">Forecast</div>
+                <div class="forecast-list">
+                    
+                    <div class="forecast-row">
+                        <div class="day-name">Today</div>
+                        <div class="day-status"><span class="status-icon">🌧️</span><span>Rain</span></div>
+                        <div class="high-temp">68°</div>
+                        <div class="low-temp">55°</div>
+                    </div>
+
+                    <div class="forecast-row">
+                        <div class="day-name">Tomorrow</div>
+                        <div class="day-status"><span class="status-icon">⛅</span><span>Cloudy</span></div>
+                        <div class="high-temp">72°</div>
+                        <div class="low-temp">58°</div>
+                    </div>
+
+                    <div class="forecast-row">
+                        <div class="day-name">Mon, Jun 8</div>
+                        <div class="day-status"><span class="status-icon">☀️</span><span>Sunny</span></div>
+                        <div class="high-temp">75°</div>
+                        <div class="low-temp">60°</div>
+                    </div>
+
+                    <div class="forecast-row">
+                        <div class="day-name">Tue, Jun 9</div>
+                        <div class="day-status"><span class="status-icon">☀️</span><span>Sunny</span></div>
+                        <div class="high-temp">78°</div>
+                        <div class="low-temp">62°</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
