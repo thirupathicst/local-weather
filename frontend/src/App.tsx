@@ -16,7 +16,6 @@ function App() {
         console.error('Error getting geolocation:', error);
       });
     }
-    alert('Search functionality coming soon!');
   }
 
   return (
