@@ -2,6 +2,38 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "Run Backend (watch + inspect)",
+      "command": "npm run dev:debug",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach Backend Inspector",
+      "port": 9229,
+      "restart": true,
+      "timeout": 30000,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "Run Frontend (Vite)",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend"
+    },
+    {
+      "type": "pwa-msedge",
+      "request": "launch",
+      "name": "Debug Frontend (Edge)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/src"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Debug Weather API",
@@ -11,6 +43,17 @@
       "env": {"NODE_ENV": "development"},
       "console": "integratedTerminal",
       "restart": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack (Backend + Frontend)",
+      "configurations": [
+        "Run Backend (watch + inspect)",
+        "Attach Backend Inspector",
+        "Run Frontend (Vite)",
+        "Debug Frontend (Edge)"
+      ]
     }
   ]
 }
