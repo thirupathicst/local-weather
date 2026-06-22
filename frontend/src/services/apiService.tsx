@@ -13,7 +13,13 @@ const getSummary = async (lat: number, lon: number) => {
   return response.data;
 };
 
+const getHourly = async (lat: number, lon: number) => {
+  const _url = `${apiUrl}weather/today?lat=${lat}&lon=${lon}&date=22-06-2026`;
+  const response = await axios.get(_url);
+  return response.data;
+}
+
 export default {
-    getCurrent, getSummary
+    getCurrent, getSummary, getHourly
 }
 
