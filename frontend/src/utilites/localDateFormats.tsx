@@ -38,7 +38,17 @@ function useFormattedDate(timestamp: any, format: FormatType = 'both') {
   }, [timestamp, format]);
 }
 
-export default useFormattedDate;
+function getDate() {
+  return new Date().toLocaleDateString('en-IN', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+  
+  
+
+export default { useFormattedDate, getDate };
 
 // Usage inside a component:
 // const friendlyDate = useFormattedDate("2026-06-22T06:30:00.000Z"); // date + time
