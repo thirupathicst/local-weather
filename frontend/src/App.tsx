@@ -1,59 +1,68 @@
-import { useState,useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
-import useFormattedDate from './utilites/localDateFormats'
+import formattedDate from './utilites/localDateFormats'
+import locationAccess from './utilites/locationAccess'
 import apiService from './services/apiService'
 
 function App() {
+    const geo = locationAccess();
+
     const [location, setLocation] = useState('')
     const [city, setCity] = useState('')
-    const [dateTime, setDateTime] = useState('')
     const [weather, setWeather] = useState([])
     const [summary, setSummary] = useState([])
     const [hourly, setHourly] = useState([])
 
     useEffect(() => {
-        setLocation('getting location...');
-        setCity('getting city...');
-        setDateTime(new Date().toLocaleDateString('en-IN', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-        }));
+        if (geo.loading) {
+            setLocation('getting location...');
+            setCity('getting city...');
+        }
+        
+        if((geo.error as any)?.message) {
+            setLocation((geo.error as any)?.message);
+            setCity('Error getting city');
+        }
+
+        if (geo.coordinates.latitude !== 0 || geo.coordinates.longitude !== 0) {
+            getLocationName(geo.coordinates.latitude, geo.coordinates.longitude);
+        }
+
         //handleClick();
-    }, []);
+    }, [geo.coordinates.latitude, geo.coordinates.longitude, geo.loading, geo.error]);
+
+
+    function getLocationName(latitude: number, longitude: number) {
+        apiService.locationService(latitude, longitude).then((data) => {
+            setLocation(`${data.display_name}`);
+            setCity(`${data.name}`);
+        });
+    }
 
     function handleClick() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const { latitude, longitude } = position.coords;
-                getLocationName(latitude, longitude);
-                console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-                getWeather(latitude, longitude);
-                getSummary(latitude, longitude);
-                getHourly(latitude, longitude);
-            }, error => {
-                console.error('Error getting geolocation:', error);
-            });
+        if (geo.coordinates.latitude !== 0 || geo.coordinates.longitude !== 0) {
+            const { latitude, longitude } = geo.coordinates;
+            getLocationName(latitude, longitude);
+            getWeather(latitude, longitude);
+            getSummary(latitude, longitude);
+            getHourly(latitude, longitude);
         }
     }
 
-    function getWeather(latitude: number, longitude: number) { 
+    function getWeather(latitude: number, longitude: number) {
         apiService.getCurrent(latitude, longitude).then((data) => {
-            console.log('Weather data:', data);
             setWeather(data);
         });
     }
 
     function getSummary(latitude: number, longitude: number) {
         apiService.getSummary(latitude, longitude).then((data) => {
-            console.log('Weather summary:', data);
             setSummary(data);
         });
     }
 
     function getHourly(latitude: number, longitude: number) {
         apiService.getHourly(latitude, longitude).then((data) => {
-            console.log('Hourly forecast:', data);
             setHourly(data);
         });
     }
@@ -79,24 +88,14 @@ function App() {
             weekday: 'long',
         });
     }
-
-    function getLocationName(latitude: number, longitude: number) {
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Location data:', data);
-                setLocation(`${data.display_name}`);
-                setCity(`${data.name}`);
-            });
-    }
     
     function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         setLocation(event.target.value)
     }
 
     function HourlyCard({ item, index }: { item: any; index: number }) {
-        const timeOnly = useFormattedDate(item.timestamp, 'time');
-        const {icon} = getWeatherStatus(item.rainfallMm, item.temperatureC);
+        const timeOnly = formattedDate.useFormattedDate(item.timestamp, 'time');
+        const { icon } = getWeatherStatus(item.rainfallMm, item.temperatureC);
         return (
             <div className={`hourly-card ${index === 0 ? 'active' : ''}`}>
                 <span className="hourly-time">{timeOnly}</span>
@@ -122,16 +121,14 @@ function App() {
     return (
         <>
             <div className="app-container">
-        
                 <div className="left-panel">
                     <div className="search-bar">
                         <input type="text" placeholder="Search location..." value={location} onChange={handleChange} />
                         <button onClick={handleClick}>🔍</button>
                     </div>
-
                     <div className="current-display">
                         <div className="location">{city}</div>
-                        <div className="date">{dateTime}</div>
+                        <div className="date">{formattedDate.getDate()}</div>
                         <div className="weather-hero">
                             68<span className="unit">°C</span>
                         </div>
@@ -140,7 +137,6 @@ function App() {
                 </div>
 
                 <div className="right-panel">
-            
                     <div>
                         <div className="section-title">Hourly Forecast</div>
                         <div className="hourly-container">
@@ -148,7 +144,7 @@ function App() {
                                 hourly.map((item: any, index) => {
                                     return <HourlyCard key={index} item={item} index={index} />
                                 })
-                            }                  
+                            }
                             <div className="hourly-card active">
                                 <span className="hourly-time">Now</span>
                                 <span className="hourly-icon">🌧️</span>
@@ -156,6 +152,7 @@ function App() {
                             </div>
                         </div>
                     </div>
+                </div>
 
                     <div>
                         <div className="section-title">Today's Details</div>
@@ -180,7 +177,7 @@ function App() {
                         <div className="forecast-list">
                             {
                                 summary.map((item: any, index) => {
-                                    const {icon ,label} = getWeatherStatus(item.rainfallPercent, item.tempMaxC);
+                                    const { icon, label } = getWeatherStatus(item.rainfallPercent, item.tempMaxC);
                                     return (
                                         <div key={index} className="forecast-row">
                                             <div className="day-name">{getDayLabel(item.timestamp)}</div>
@@ -193,7 +190,6 @@ function App() {
 
                         </div>
                     </div>
-
                 </div>
             </div>
         </>

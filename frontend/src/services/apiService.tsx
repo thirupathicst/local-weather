@@ -19,7 +19,13 @@ const getHourly = async (lat: number, lon: number) => {
   return response.data;
 }
 
+const locationService = async (latitude: number, longitude: number) => {
+  const _url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+  const response = await axios.get(_url);
+  return response.data;
+};
+
 export default {
-    getCurrent, getSummary, getHourly
+    getCurrent, getSummary, getHourly, locationService
 }
 
