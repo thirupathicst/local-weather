@@ -152,6 +152,7 @@ function App() {
                             </div>
                         </div>
                     </div>
+                </div>
 
                     <div>
                         <div className="section-title">Today's Details</div>
